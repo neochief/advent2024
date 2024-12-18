@@ -13,6 +13,14 @@ export const simple0 = `######
 #S####
 ######`;
 
+export const simple1 = `######
+###E#
+#...#
+#...#
+#...#
+#S###
+#####`;
+
 export const simple = `########
 #E..S..#
 ########`;
