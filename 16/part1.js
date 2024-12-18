@@ -1,4 +1,4 @@
-import {parseInput, realInput, simple0, testInput, testInput4, testInput7, testInput9} from "./input.js";
+import {parseInput, realInput, simple0, simple1, testInput, testInput2, testInput3, testInput4, testInput6, testInput7, testInput9} from "./input.js";
 
 const Direction = Object.freeze({
     EAST: 'EAST',
@@ -12,6 +12,7 @@ const CellType = Object.freeze({
     EMPTY: '.',
     START: 'S',
     END: 'E',
+    SEAT: 'O',
 });
 
 export function run(grid, DEBUG = false) {
@@ -52,19 +53,29 @@ export function run(grid, DEBUG = false) {
             const newTracks = traverse(grid, visited, tracks[i], winners, c);
             allNewTracks = allNewTracks.concat(newTracks);
         }
-        allNewTracks = allNewTracks.filter((track, index, self) =>
-                index === self.findIndex((t) => (
-                    t.x === track.x && t.y === track.y && t.d === track.d && t.price === track.price
-                ))
-        );
+        allNewTracks = allNewTracks.filter((track, index, self) => {
+            if (track.duplicate) {
+                return false;
+            }
+
+            const duplicates = self.filter((t) => {
+                return t.x === track.x && t.y === track.y && t.d === track.d && t.price === track.price && t !== track
+            });
+
+            duplicates.forEach(d => {
+                track.alternate = track.alternate || [];
+                if (d.prev) {
+                    track.alternate.push(d.prev);
+                }
+                d.duplicate = true;
+            });
+
+            return true;
+        });
         tracks = allNewTracks;
 
-        // const newTracks = traverse(grid, visited, tracks[0], winners, c);
-        // tracks = newTracks.concat(tracks.slice(1));
-        // tracks = tracks.sort((a, b) => a.price - b.price);
-        console.log(c, tracks.length);
-
         if (DEBUG) {
+            console.log(c, tracks.length);
             console.log(c, tracks.length, ": ", tracks.map(t => t.x + "/" + t.y + '$' + t.price).join(' '), winners.length);
             console.log(renderGrid(grid, visited, tracks));
         }
@@ -78,6 +89,12 @@ export function run(grid, DEBUG = false) {
 
     const winner = winners.sort((a, b) => a.price - b.price)[0];
 
+    return part1(grid, winner, DEBUG);
+
+    //return part2(grid, winner, DEBUG);
+}
+
+function part1(grid, winner, DEBUG) {
     const result = winner.price;
 
     function drawPath(track) {
@@ -110,8 +127,37 @@ export function run(grid, DEBUG = false) {
     }
     drawPath(winner);
 
-   // const str = grid.map(s => s.join('')).join('\n');
-    const str = renderGrid(grid, visited, tracks);
+    const str = grid.map(s => s.join('')).join('\n');
+
+    if (DEBUG) {
+        console.log(result);
+        console.log(str);
+    }
+
+    return [result, str];
+}
+
+function part2(grid, winner, DEBUG) {
+    let result = 0;
+
+    function drawPath(track) {
+        if (grid[track.x][track.y] !== CellType.SEAT) {
+            grid[track.x][track.y] = CellType.SEAT;
+            result++;
+        }
+
+        if (track.prev) {
+            drawPath(track.prev);
+        }
+        if (track.alternate) {
+            track.alternate.forEach(t => {
+                drawPath(t);
+            });
+        }
+    }
+    drawPath(winner);
+
+    const str = grid.map(s => s.join('')).join('\n');
 
     if (DEBUG) {
         console.log(result);
@@ -149,7 +195,12 @@ function traverse(grid, visited, track, winners, c) {
                 visited[x][y].push(track);
             } else if (first.price === track.price) {
                 visited[x][y].push(track);
-                //return [];
+                visited[x][y].forEach(t => {
+                    t.alternate = t.alternate || [];
+                    t.alternate.push(track);
+                    track.alternate = track.alternate || [];
+                    track.alternate.push(t);
+                });
             } else {
                 return [];
             }

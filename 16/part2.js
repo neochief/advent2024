@@ -15,8 +15,6 @@ const CellType = Object.freeze({
     SEAT: 'O',
 });
 
-// run(parseInput(testInput2), true);
-
 export function run(grid, DEBUG = false) {
     if (!grid) {
         grid = parseInput(realInput);
