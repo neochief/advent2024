@@ -12,10 +12,10 @@ const Opcodes = Object.freeze({
 });
 
 if (typeof process !== "undefined" && process.argv[2] === "run") {
-    console.log(part1(example1));
+    console.log(code(example1));
 }
 
-export function part1(input) {
+export function code(input) {
     let {a, b, c, program} = parseInput(input);
 
     let pointer = 0;
