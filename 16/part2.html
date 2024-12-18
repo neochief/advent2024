@@ -5,8 +5,9 @@
     <script src="./part2.js" type="module"></script>
     <script type="module">
         import { run } from './part2.js';
+        import { realInput } from './input.js';
         document.addEventListener("DOMContentLoaded", function(event) {
-            document.body.innerHTML = "<pre>" + run() + "</pre>";
+            document.body.innerHTML = "<pre>" + run(realInput).join("\n\n") + "</pre>";
         });
     </script>
 </head>

@@ -7,56 +7,56 @@ function assertResultIs(result, expected) {
 }
 
 test('part1: simple0', () => {
-    const result = run(parseInput(simple0));
+    const result = run(simple0);
     assertResultIs(result, 3008);
 });
 
 test('part1: ex1', () => {
-    const result = run(parseInput(testInput));
+    const result = run(testInput);
     assertResultIs(result, 7036);
 });
 
 test('part1: ex2', () => {
-    const result = run(parseInput(testInput2));
+    const result = run(testInput2);
     assertResultIs(result, 11048);
 });
 
 test('part1: ex3', () => {
-    const result = run(parseInput(testInput3));
+    const result = run(testInput3);
     assertResultIs(result, 21110);
 });
 
 test('part1: ex4', () => {
-    const result = run(parseInput(testInput4));
+    const result = run(testInput4);
     assertResultIs(result, 4013);
 });
 
 test('part1: ex5', () => {
-    const result = run(parseInput(testInput5));
+    const result = run(testInput5);
     assertResultIs(result, 6013);
 });
 
 test('part1: ex6', () => {
-    const result = run(parseInput(testInput6));
+    const result = run(testInput6);
     assertResultIs(result, 6018);
 });
 
 test('part1: ex7', () => {
-    const result = run(parseInput(testInput7));
+    const result = run(testInput7);
     assertResultIs(result, 25105);
 });
 
 test('part1: ex8', () => {
-    const result = run(parseInput(testInput8));
+    const result = run(testInput8);
     assertResultIs(result, 21148);
 });
 
 test('part1: ex9', () => {
-    const result = run(parseInput(testInput9));
+    const result = run(testInput9);
     assertResultIs(result, 7020);
 });
 
 test('part1: real', () => {
-    const result = run(parseInput(realInput));
+    const result = run(realInput);
     assertResultIs(result, 105496); // 107424
 });

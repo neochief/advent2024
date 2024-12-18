@@ -1,4 +1,5 @@
 import {parseInput, realInput, simple0, simple1, testInput, testInput2, testInput3, testInput4, testInput6, testInput7, testInput9} from "./input.js";
+import {example1} from "../17/input.js";
 
 const Direction = Object.freeze({
     EAST: 'EAST',
@@ -15,10 +16,12 @@ const CellType = Object.freeze({
     SEAT: 'O',
 });
 
-export function run(grid, DEBUG = false) {
-    if (!grid) {
-        grid = parseInput(realInput);
-    }
+if (typeof process !== "undefined" && process.argv[2] === "run") {
+    console.log(run(simple0));
+}
+
+export function run(input, DEBUG = false) {
+    const grid = parseInput(input);
 
     let start;
     for (let i = 0; i < grid.length; i++) {
