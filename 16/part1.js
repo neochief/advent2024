@@ -1,21 +1,35 @@
-import {parseInput, testInput} from "./input.js";
+import {parseInput, realInput, simple0, testInput, testInput4, testInput7, testInput9} from "./input.js";
 
-console.log(run());
+const Direction = Object.freeze({
+    EAST: 'EAST',
+    WEST: 'WEST',
+    SOUTH: 'SOUTH',
+    NORTH: 'NORTH'
+});
 
-function _(v) {
-    return JSON.parse(JSON.stringify(v));
-}
+const CellType = Object.freeze({
+    WALL: '#',
+    EMPTY: '.',
+    START: 'S',
+    END: 'E',
+});
 
-export function run(grid) {
+export function run(grid, DEBUG = false) {
     if (!grid) {
-        grid = parseInput(testInput);
+        grid = parseInput(realInput);
     }
 
-    let start, end;
+    let start;
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
-            if (grid[i][j] === 'S') {
-                start = {x: i, y: j, d: [0, 1], type: 'S', win: 'E', price: 0, path: []};
+            if (grid[i][j] === CellType.START) {
+                start = {
+                    x: i,
+                    y: j,
+                    d: Direction.EAST,
+                    price: 0,
+                    prev: undefined,
+                };
             }
         }
     }
@@ -33,13 +47,28 @@ export function run(grid) {
 
     let c = 0;
     while (tracks.length) {
-        let newTracks = [];
+        let allNewTracks = [];
         for (let i = 0; i < tracks.length; i++) {
-            newTracks = newTracks.concat(traverse(grid, visited, tracks[i], winners));
+            const newTracks = traverse(grid, visited, tracks[i], winners, c);
+            allNewTracks = allNewTracks.concat(newTracks);
         }
-        tracks = newTracks;
+        allNewTracks = allNewTracks.filter((track, index, self) =>
+                index === self.findIndex((t) => (
+                    t.x === track.x && t.y === track.y && t.d === track.d && t.price === track.price
+                ))
+        );
+        tracks = allNewTracks;
 
-        console.log(c, tracks.length, winners.length);
+        // const newTracks = traverse(grid, visited, tracks[0], winners, c);
+        // tracks = newTracks.concat(tracks.slice(1));
+        // tracks = tracks.sort((a, b) => a.price - b.price);
+        console.log(c, tracks.length);
+
+        if (DEBUG) {
+            console.log(c, tracks.length, ": ", tracks.map(t => t.x + "/" + t.y + '$' + t.price).join(' '), winners.length);
+            console.log(renderGrid(grid, visited, tracks));
+        }
+
         c++;
     }
 
@@ -51,59 +80,76 @@ export function run(grid) {
 
     const result = winner.price;
 
-    for (let i = 1; i < winner.path.length - 1; i++) {
-        const p = winner.path[i];
-        const n = winner.path[i + 1];
-        grid[p.x][p.y] = n.d ? n.d[0] > 0 ? 'v' : n.d[0] < 0 ? '^' : n.d[1] > 0 ? '>' : '<' : '?';
-    }
+    function drawPath(track) {
+        let char = '?';
+        switch (track.d) {
+            case Direction.NORTH:
+                char = '↑';
+                break;
+            case Direction.SOUTH:
+                char = '↓';
+                break;
+            case Direction.WEST:
+                char = '←';
+                break;
+            case Direction.EAST:
+                char = '→';
+                break;
+            default:
+                char = '?';
+        }
+        if (grid[track.x][track.y] === CellType.WALL) {
+            throw new Error('Invalid path');
+        }
 
-    const str = grid.map(s => s.join('')).join('\n');
+        grid[track.x][track.y] = char;
+
+        if (track.prev) {
+            drawPath(track.prev);
+        }
+    }
+    drawPath(winner);
+
+   // const str = grid.map(s => s.join('')).join('\n');
+    const str = renderGrid(grid, visited, tracks);
+
+    if (DEBUG) {
+        console.log(result);
+        console.log(str);
+    }
 
     return [result, str];
 }
 
-function traverse(grid, visited, track, winners) {
+function traverse(grid, visited, track, winners, c) {
     const x = track.x;
     const y = track.y;
+    const d = track.d;
 
     if (x < 0 || x >= grid.length || y < 0 || y >= grid[0].length) {
         return [];
     }
 
-    if (grid[x][y] !== '.' && grid[x][y] !== track.type && grid[x][y] !== track.win) {
+    if (grid[x][y] === CellType.WALL) {
         return [];
     }
 
-    if (track.path.find(p => p.x === x && p.y === y)) {
+    if (findInPath(track, x, y, d)) {
         return [];
     }
-
-    if (track.path.length) {
-        const lastTrack = track.path[track.path.length - 1];
-        lastTrack.price = lastTrack.d[0] !== track.d[0] || lastTrack.d[1] !== track.d[1] ? 1001 : 1;
-    }
-
-    track.price = track.path.reduce((acc, p) => acc + (p.price || 0), 0);
-
-    track.path = track.path.concat({
-        x,
-        y,
-        d: track.d,
-        aPrice: track.price,
-    });
 
     if (visited[x][y].length) {
-        const first = visited[x][y].find(t => t.type === track.type && t.d[0] === track.d[0] && t.d[1] === track.d[1]);
+        const first = visited[x][y].find(t => isSameDirection(t.d, d));
 
         if (!first) {
             visited[x][y].push(track);
         } else {
             if (first.price > track.price) {
-                visited[x][y] = visited[x][y].filter(t => t.type !== track.type || t.d[0] !== track.d[0] || t.d[1] !== track.d[1]);
+                visited[x][y] = visited[x][y].filter(t => !isSameDirection(t.d, d));
                 visited[x][y].push(track);
             } else if (first.price === track.price) {
                 visited[x][y].push(track);
-                return [];
+                //return [];
             } else {
                 return [];
             }
@@ -112,15 +158,132 @@ function traverse(grid, visited, track, winners) {
         visited[x][y].push(track);
     }
 
-    if (grid[x][y] === track.win) {
-        winners.push({path: track.path, price: track.path.reduce((acc, p) => acc + (p.price || 0), 0)});
+    if (grid[x][y] === CellType.END) {
+        winners.push(track);
         return [];
     }
 
-    return [
-        {x: x - 1, y, d: [-1, 0], type: track.type, win: track.win, path: _(track.path)},
-        {x: x + 1, y, d: [1, 0], type: track.type, win: track.win, path: _(track.path)},
-        {x, y: y - 1, d: [0, -1], type: track.type, win: track.win, path: _(track.path)},
-        {x, y: y + 1, d: [0, 1], type: track.type, win: track.win, path: _(track.path)},
+    // Add new tracks.
+
+    const directions = [
+        Direction.WEST,
+        Direction.NORTH,
+        Direction.SOUTH,
+        Direction.EAST,
     ]
+
+    const newTracks = [];
+
+    for (let i = 0; i < directions.length; i++) {
+        const dir = directions[i];
+        const nums = getDirectionNums(dir);
+
+        const nx = x + nums[0];
+        const ny = y + nums[1];
+
+        if (nx < 0 || nx >= grid.length || ny < 0 || ny >= grid[0].length) {
+            continue;
+        }
+
+        if (grid[nx][ny] === CellType.WALL) {
+            continue;
+        }
+
+        // Don't return, unless there's no other way to go.
+        if (isOpposite(dir, d)) {
+            continue;
+        }
+
+        newTracks.push({x: nx, y: ny, d: dir, price: track.price + getPrice(dir, d), prev: track});
+    }
+
+    // Return only if there's no other way to go.
+    if (c === 0) {
+        const dir = getOppositeDirection(d);
+        const nums = getDirectionNums(dir);
+        const nx = x + nums[0];
+        const ny = y + nums[1];
+        newTracks.push({x: nx, y: ny, d: dir, price: track.price + getPrice(dir, d), prev: track});
+    }
+
+    return newTracks;
 }
+
+function _(v) {
+    return JSON.parse(JSON.stringify(v));
+}
+
+function findInPath(track, x, y, d) {
+    if (track.prev === undefined) {
+        return false;
+    }
+
+    if (track.prev.x === x && track.prev.y === y && isSameDirection(track.prev.d, d)) {
+        return true;
+    }
+
+    return findInPath(track.prev, x, y, d);
+}
+
+function renderGrid(grid, visited, tracks) {
+    const render = _(grid);
+    if (visited) {
+        for (let i = 0; i < visited.length; i++) {
+            for (let j = 0; j < visited[i].length; j++) {
+                render[i][j] = render[i][j] === '.' ? (visited[i][j].length ? 'O' : render[i][j]) : render[i][j];
+            }
+        }
+    }
+    if (tracks.length) {
+        for (let i = tracks.length - 1; i >= 0; i--) {
+            render[tracks[i].x][tracks[i].y] = render[tracks[i].x][tracks[i].y] === '.' ? 'X' : render[tracks[i].x][tracks[i].y];
+        }
+    }
+    let str = render.map(s => s.join('')).join('\n');
+    return str;
+}
+
+function getPrice(oldD, newD) {
+    if (isSameDirection(oldD, newD)) {
+        return 1;
+    } else if (isOpposite(oldD, newD)) {
+        return 2001;
+    } else {
+        return 1001;
+    }
+}
+
+function getDirectionNums(d) {
+    switch (d) {
+        case Direction.NORTH:
+            return [-1, 0];
+        case Direction.SOUTH:
+            return [1, 0];
+        case Direction.WEST:
+            return [0, -1];
+        case Direction.EAST:
+            return [0, 1];
+    }
+}
+
+function getOppositeDirection(d) {
+    switch (d) {
+        case Direction.NORTH:
+            return Direction.SOUTH;
+        case Direction.SOUTH:
+            return Direction.NORTH;
+        case Direction.WEST:
+            return Direction.EAST;
+        case Direction.EAST:
+            return Direction.WEST;
+    }
+}
+
+function isOpposite(d1, d2) {
+    return d1 === Direction.NORTH && d2 === Direction.SOUTH || d1 === Direction.SOUTH && d2 === Direction.NORTH || d1 === Direction.WEST && d2 === Direction.EAST || d1 === Direction.EAST && d2 === Direction.WEST;
+}
+
+function isSameDirection(d1, d2) {
+    return d1 === d2;
+}
+
