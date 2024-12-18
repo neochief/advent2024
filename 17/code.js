@@ -20,70 +20,80 @@ export function part1(input) {
     return run({a, b, c, program});
 }
 
+export function part2(input) {
+    let {a, b, c, program} = parseInput(input);
+    return run({a, b, c, program});
+}
+
 export function run({a, b, c, program}) {
     let pointer = 0;
     let allOutput = [];
     let i = 0;
     while (pointer < program.length) {
-        const opcode = program[pointer];
-        pointer++;
-
-        let operand;
         let output;
-        switch (opcode) {
-            case Opcodes.adv:
-            case Opcodes.bxl:
-            case Opcodes.bst:
-            case Opcodes.bxc:
-            case Opcodes.out:
-            case Opcodes.bdv:
-            case Opcodes.cdv:
-                operand = getOperand(program, pointer);
-                pointer++;
-                break;
-            case Opcodes.jnz:
-                break;
-            default:
-                throw new Error(`Unknown opcode ${program[pointer]}`);
-        }
-
-        switch (opcode) {
-            case Opcodes.adv:
-                ({a, b, c, pointer} = adv(operand, a, b, c, pointer));
-                break;
-            case Opcodes.bxl:
-                ({a, b, c, pointer} = bxl(operand, a, b, c, pointer));
-                break;
-            case Opcodes.bst:
-                ({a, b, c, pointer} = bst(operand, a, b, c, pointer));
-                break;
-            case Opcodes.jnz:
-                ({a, b, c, pointer, output} = jnz(operand, a, b, c, pointer, program));
-                break;
-            case Opcodes.bxc:
-                ({a, b, c, pointer} = bxc(operand, a, b, c, pointer));
-                break;
-            case Opcodes.out:
-                ({a, b, c, pointer, output} = out(operand, a, b, c, pointer));
-                break;
-            case Opcodes.bdv:
-                ({a, b, c, pointer} = bdv(operand, a, b, c, pointer));
-                break;
-            case Opcodes.cdv:
-                ({a, b, c, pointer} = cdv(operand, a, b, c, pointer));
-                break;
-            default:
-                throw new Error(`Unknown opcode ${program[pointer]}`);
-        }
-
+        ({a, b, c, pointer, program, output} = cycle({a, b, c, pointer, program}));
         if (output !== undefined) {
             allOutput.push(output);
         }
-
         i++;
     }
 
     return [allOutput.join(','), {a, b, c, pointer}];
+}
+
+function cycle({a, b, c, pointer, program}) {
+    const opcode = program[pointer];
+    pointer++;
+
+    let operand;
+    let output;
+    switch (opcode) {
+        case Opcodes.adv:
+        case Opcodes.bxl:
+        case Opcodes.bst:
+        case Opcodes.bxc:
+        case Opcodes.out:
+        case Opcodes.bdv:
+        case Opcodes.cdv:
+            operand = getOperand(program, pointer);
+            pointer++;
+            break;
+        case Opcodes.jnz:
+            break;
+        default:
+            throw new Error(`Unknown opcode ${program[pointer]}`);
+    }
+
+    switch (opcode) {
+        case Opcodes.adv:
+            ({a, b, c, pointer} = adv(operand, a, b, c, pointer));
+            break;
+        case Opcodes.bxl:
+            ({a, b, c, pointer} = bxl(operand, a, b, c, pointer));
+            break;
+        case Opcodes.bst:
+            ({a, b, c, pointer} = bst(operand, a, b, c, pointer));
+            break;
+        case Opcodes.jnz:
+            ({a, b, c, pointer, output} = jnz(operand, a, b, c, pointer, program));
+            break;
+        case Opcodes.bxc:
+            ({a, b, c, pointer} = bxc(operand, a, b, c, pointer));
+            break;
+        case Opcodes.out:
+            ({a, b, c, pointer, output} = out(operand, a, b, c, pointer));
+            break;
+        case Opcodes.bdv:
+            ({a, b, c, pointer} = bdv(operand, a, b, c, pointer));
+            break;
+        case Opcodes.cdv:
+            ({a, b, c, pointer} = cdv(operand, a, b, c, pointer));
+            break;
+        default:
+            throw new Error(`Unknown opcode ${program[pointer]}`);
+    }
+
+    return {a, b, c, pointer, program, output};
 }
 
 export function adv(operand, a, b, c, pointer) {
