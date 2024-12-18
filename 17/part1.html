@@ -4,10 +4,10 @@
     <script src="./input.js" type="module"></script>
     <script src="code.js" type="module"></script>
     <script type="module">
-        import { code } from './code.js';
+        import { part1 } from './code.js';
         import { realInput } from './input.js';
         document.addEventListener("DOMContentLoaded", function(event) {
-            document.body.innerHTML = "<pre>" + code(realInput)[0] + "</pre>";
+            document.body.innerHTML = "<pre>" + part1(realInput)[0] + "</pre>";
         });
     </script>
 </head>
