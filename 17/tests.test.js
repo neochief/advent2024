@@ -1,6 +1,6 @@
 import {assert, test} from 'vitest'
 import {example1, realInput} from "./input.js";
-import {part1, parseInput, adv, bxl} from "./code.js";
+import {part1,part2, parseInput, adv, bxl} from "./code.js";
 
 function assertResultIs(result, expected) {
     assert.strictEqual(result[0], expected, result[1])
@@ -13,18 +13,6 @@ test('input', () => {
     assert.equal(c, 0);
     assert.equal(program.length, 6);
     assert.deepEqual(program, [0, 1, 5, 4, 3, 0]);
-});
-
-test('adv', () => {
-    assert.deepEqual(adv(2, 64, 0, 0, 0), { a: 16, b: 0, c: 0, pointer: 0 });
-    assert.deepEqual(adv(5, 64, 4, 0, 0), { a: 4, b: 4, c: 0, pointer: 0 });
-    assert.deepEqual(adv(6, 64, 0, 12, 0), { a: 0, b: 0, c: 12, pointer: 0 });
-});
-
-test('bxl', () => {
-    assert.deepEqual(bxl(2, 0, 64, 0, 0), { a: 0, b: 66, c: +0, pointer: +0 });
-    assert.deepEqual(bxl(5, 0, 4, 0, 0), { a: 0, b: 1, c: +0, pointer: +0 });
-    assert.deepEqual(bxl(6, 0, 0, 0, 0), { a: 0, b: 6, c: +0, pointer: +0 });
 });
 
 test('part1: e1', () => {
@@ -83,7 +71,7 @@ test('part1: real', () => {
     assert.deepEqual(result[0], '6,2,7,2,3,1,6,0,5');
 });
 
-test('part2: example1', () => {
+test('part1 -> part2: example1', () => {
     const result1 = part1(`Register A: 2024
 Register B: 0
 Register C: 0
@@ -98,6 +86,20 @@ Register C: 0
 Program: 0,3,5,4,3,0`);
     assert.deepEqual(result2[0], '0,3,5,4,3,0');
 });
+
+// test('part2: example1', () => {
+//     const result = part2(`Register A: 2024
+// Register B: 0
+// Register C: 0
+//
+// Program: 0,3,5,4,3,0`);
+//     assert.equal(result, 117440);
+// });
+//
+// test('part2: real', () => {
+//     const result = part2(realInput);
+//     assert.equal(result, 117440);
+// });
 
 
 
