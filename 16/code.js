@@ -134,6 +134,11 @@ export function part2(input) {
     return [result, str];
 }
 
+export function parseInput(input) {
+    const grid = input.split('\n').map(line => line.split(''));
+    return grid;
+}
+
 function findPath(grid, start) {
     const visited = new Array(grid.length).fill(0).map(() => new Array(grid[0].length).fill(0));
     for (let i = 0; i < visited.length; i++) {

@@ -1,8 +1,3 @@
-export function parseInput(input) {
-    const grid = input.split('\n').map(line => line.split(''));
-    return grid;
-}
-
 export const simple0 = `######
 ###E#
 ###.#
