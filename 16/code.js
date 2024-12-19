@@ -1,4 +1,4 @@
-import {parseInput, realInput, simple0, simple1, testInput, testInput2, testInput3, testInput4, testInput6, testInput7, testInput9} from "./input.js";
+import {simple0} from "./input.js";
 
 const Direction = Object.freeze({
     EAST: 'EAST',
@@ -16,7 +16,7 @@ const CellType = Object.freeze({
 });
 
 if (typeof process !== "undefined" && process.argv[2] === "run") {
-    console.log(run(simple0));
+    console.log(part1(simple0));
 }
 
 const DEBUG = false;
@@ -24,22 +24,25 @@ const DEBUG = false;
 export function part1(input) {
     const grid = parseInput(input);
 
-    let start;
+    let start, end;
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
             if (grid[i][j] === CellType.START) {
                 start = {
                     x: i,
                     y: j,
-                    d: Direction.EAST,
-                    price: 0,
-                    prev: undefined,
+                };
+            }
+            if (grid[i][j] === CellType.END) {
+                end = {
+                    x: i,
+                    y: j,
                 };
             }
         }
     }
 
-    const winner = findPath(grid, start);
+    const winner = findPath(grid, start, end);
 
     const result = winner.price;
 
@@ -87,22 +90,25 @@ export function part1(input) {
 export function part2(input) {
     const grid = parseInput(input);
 
-    let start;
+    let start, end;
     for (let i = 0; i < grid.length; i++) {
         for (let j = 0; j < grid[i].length; j++) {
             if (grid[i][j] === CellType.START) {
                 start = {
                     x: i,
                     y: j,
-                    d: Direction.EAST,
-                    price: 0,
-                    prev: undefined,
+                };
+            }
+            if (grid[i][j] === CellType.END) {
+                end = {
+                    x: i,
+                    y: j,
                 };
             }
         }
     }
 
-    const winner = findPath(grid, start);
+    const winner = findPath(grid, start, end);
 
     let result = 0;
 
@@ -134,12 +140,12 @@ export function part2(input) {
     return [result, str];
 }
 
-export function parseInput(input) {
+function parseInput(input) {
     const grid = input.split('\n').map(line => line.split(''));
     return grid;
 }
 
-function findPath(grid, start) {
+function findPath(grid, start, end) {
     const visited = new Array(grid.length).fill(0).map(() => new Array(grid[0].length).fill(0));
     for (let i = 0; i < visited.length; i++) {
         for (let j = 0; j < visited[i].length; j++) {
@@ -149,13 +155,19 @@ function findPath(grid, start) {
 
     let winners = [];
     let tracks = [];
-    tracks.push(start);
+    tracks.push({
+        x: start.x,
+        y: start.y,
+        d: Direction.EAST,
+        price: 0,
+        prev: undefined,
+    });
 
     let c = 0;
     while (tracks.length) {
         let allNewTracks = [];
         for (let i = 0; i < tracks.length; i++) {
-            const newTracks = traverse(grid, visited, tracks[i], winners, c);
+            const newTracks = traverse(grid, visited, tracks[i], end, winners, c);
             allNewTracks = allNewTracks.concat(newTracks);
         }
         allNewTracks = allNewTracks.filter((track, index, self) => {
@@ -197,7 +209,7 @@ function findPath(grid, start) {
     return winner;
 }
 
-function traverse(grid, visited, track, winners, c) {
+function traverse(grid, visited, track, end, winners, c) {
     const x = track.x;
     const y = track.y;
     const d = track.d;
@@ -239,7 +251,7 @@ function traverse(grid, visited, track, winners, c) {
         visited[x][y].push(track);
     }
 
-    if (grid[x][y] === CellType.END) {
+    if (x === end.x && y === end.y) {
         winners.push(track);
         return [];
     }
@@ -290,10 +302,6 @@ function traverse(grid, visited, track, winners, c) {
     return newTracks;
 }
 
-function _(v) {
-    return JSON.parse(JSON.stringify(v));
-}
-
 function findInPath(track, x, y, d) {
     if (track.prev === undefined) {
         return false;
@@ -322,6 +330,10 @@ function renderGrid(grid, visited, tracks) {
     }
     let str = render.map(s => s.join('')).join('\n');
     return str;
+}
+
+function _(v) {
+    return JSON.parse(JSON.stringify(v));
 }
 
 function getPrice(oldD, newD) {
