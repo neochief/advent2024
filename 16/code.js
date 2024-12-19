@@ -1,5 +1,4 @@
 import {parseInput, realInput, simple0, simple1, testInput, testInput2, testInput3, testInput4, testInput6, testInput7, testInput9} from "./input.js";
-import {example1} from "../17/input.js";
 
 const Direction = Object.freeze({
     EAST: 'EAST',
@@ -20,7 +19,9 @@ if (typeof process !== "undefined" && process.argv[2] === "run") {
     console.log(run(simple0));
 }
 
-export function run(input, DEBUG = false) {
+const DEBUG = false;
+
+export function part1(input) {
     const grid = parseInput(input);
 
     let start;
@@ -38,6 +39,102 @@ export function run(input, DEBUG = false) {
         }
     }
 
+    const winner = findPath(grid, start);
+
+    const result = winner.price;
+
+    function drawPath(track) {
+        let char = '?';
+        switch (track.d) {
+            case Direction.NORTH:
+                char = '↑';
+                break;
+            case Direction.SOUTH:
+                char = '↓';
+                break;
+            case Direction.WEST:
+                char = '←';
+                break;
+            case Direction.EAST:
+                char = '→';
+                break;
+            default:
+                char = '?';
+        }
+        if (grid[track.x][track.y] === CellType.WALL) {
+            throw new Error('Invalid path');
+        }
+
+        grid[track.x][track.y] = char;
+
+        if (track.prev) {
+            drawPath(track.prev);
+        }
+    }
+
+    drawPath(winner);
+
+    const str = grid.map(s => s.join('')).join('\n');
+
+    if (DEBUG) {
+        console.log(result);
+        console.log(str);
+    }
+
+    return [result, str];
+}
+
+export function part2(input) {
+    const grid = parseInput(input);
+
+    let start;
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid[i].length; j++) {
+            if (grid[i][j] === CellType.START) {
+                start = {
+                    x: i,
+                    y: j,
+                    d: Direction.EAST,
+                    price: 0,
+                    prev: undefined,
+                };
+            }
+        }
+    }
+
+    const winner = findPath(grid, start);
+
+    let result = 0;
+
+    function drawPath(track) {
+        if (grid[track.x][track.y] !== CellType.SEAT) {
+            grid[track.x][track.y] = CellType.SEAT;
+            result++;
+        }
+
+        if (track.prev) {
+            drawPath(track.prev);
+        }
+        if (track.alternate) {
+            track.alternate.forEach(t => {
+                drawPath(t);
+            });
+        }
+    }
+
+    drawPath(winner);
+
+    const str = grid.map(s => s.join('')).join('\n');
+
+    if (DEBUG) {
+        console.log(result);
+        console.log(str);
+    }
+
+    return [result, str];
+}
+
+function findPath(grid, start) {
     const visited = new Array(grid.length).fill(0).map(() => new Array(grid[0].length).fill(0));
     for (let i = 0; i < visited.length; i++) {
         for (let j = 0; j < visited[i].length; j++) {
@@ -92,82 +189,7 @@ export function run(input, DEBUG = false) {
 
     const winner = winners.sort((a, b) => a.price - b.price)[0];
 
-    //return part1(grid, winner, DEBUG);
-
-    return part2(grid, winner, DEBUG);
-}
-
-function part1(grid, winner, DEBUG) {
-    const result = winner.price;
-
-    function drawPath(track) {
-        let char = '?';
-        switch (track.d) {
-            case Direction.NORTH:
-                char = '↑';
-                break;
-            case Direction.SOUTH:
-                char = '↓';
-                break;
-            case Direction.WEST:
-                char = '←';
-                break;
-            case Direction.EAST:
-                char = '→';
-                break;
-            default:
-                char = '?';
-        }
-        if (grid[track.x][track.y] === CellType.WALL) {
-            throw new Error('Invalid path');
-        }
-
-        grid[track.x][track.y] = char;
-
-        if (track.prev) {
-            drawPath(track.prev);
-        }
-    }
-    drawPath(winner);
-
-    const str = grid.map(s => s.join('')).join('\n');
-
-    if (DEBUG) {
-        console.log(result);
-        console.log(str);
-    }
-
-    return [result, str];
-}
-
-function part2(grid, winner, DEBUG) {
-    let result = 0;
-
-    function drawPath(track) {
-        if (grid[track.x][track.y] !== CellType.SEAT) {
-            grid[track.x][track.y] = CellType.SEAT;
-            result++;
-        }
-
-        if (track.prev) {
-            drawPath(track.prev);
-        }
-        if (track.alternate) {
-            track.alternate.forEach(t => {
-                drawPath(t);
-            });
-        }
-    }
-    drawPath(winner);
-
-    const str = grid.map(s => s.join('')).join('\n');
-
-    if (DEBUG) {
-        console.log(result);
-        console.log(str);
-    }
-
-    return [result, str];
+    return winner;
 }
 
 function traverse(grid, visited, track, winners, c) {
